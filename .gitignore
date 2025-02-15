@@ -1,6 +1,7 @@
 # Project specific
 outputs/
 prompts/
+chrome-profile/
 
 # Dependencies
 node_modules/
