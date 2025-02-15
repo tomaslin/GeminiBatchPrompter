@@ -74,7 +74,7 @@ async function processPrompt(page, prompt, expectedCompletedDivs) {
     await page.waitForFunction((expectedCount) => {
       const completedDivs = document.querySelectorAll('div.avatar_primary_animation.is-gpi-avatar[data-test-lottie-animation-status="completed"]');
       return completedDivs.length === expectedCount;
-    }, { timeout: 60000 }, expectedCompletedDivs);
+    }, { timeout: 120000 }, expectedCompletedDivs);
 
   } catch (promptError) {
     console.error(`Error processing prompt: ${prompt}`, promptError);
@@ -87,13 +87,29 @@ function readPromptsFromDirectory() {
     throw new Error('prompts directory not found');
   }
 
-  const files = fs.readdirSync(promptsDir);
-  const allPrompts = files.map(file => ({
-    filename: file,
-    prompts: fs.readFileSync(path.join(promptsDir, file), 'utf-8')
-      .split('\n')
-      .filter(line => line.trim())
-  }));
+  const files = fs.readdirSync(promptsDir)
+    .filter(file => file !== '.DS_Store');
+  
+  const allPrompts = files.map(file => {
+    const content = fs.readFileSync(path.join(promptsDir, file), 'utf-8');
+    const lines = content.split('\n');
+    let extraPrefix = '';
+    let prompts = lines;
+
+    // Check if first line starts with EXTRA:
+    if (lines[0]?.trim().startsWith('EXTRA:')) {
+      extraPrefix = lines[0].substring('EXTRA:'.length).trim();
+      prompts = lines.slice(1); // Remove the EXTRA line
+    }
+
+    return {
+      filename: file,
+      extraPrefix,
+      prompts: prompts
+        .filter(line => line.trim())
+        .map(prompt => extraPrefix ? `${extraPrefix} ${prompt.trim()}` : prompt.trim())
+    };
+  });
   
   return allPrompts;
 }
