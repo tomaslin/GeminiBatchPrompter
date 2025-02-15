@@ -1,6 +1,6 @@
 # Project specific
 outputs/
-prompts.txt
+prompts/
 
 # Dependencies
 node_modules/
